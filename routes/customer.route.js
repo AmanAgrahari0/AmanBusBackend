@@ -171,28 +171,27 @@ router.post('/create-checkout-session', async (req, res) => {
     res.redirect(303, session.url);
 });
 
-router.post('/purchase-pass', (req, res) => {
-    const passenger_phone = req.body.passenger_phone;
-    const passenger_email = req.body.passenger_email;
-
-    if (req.body) {
-        connection.query(
-            `INSERT INTO buspass (passenger_phone, passenger_email) VALUES (?, ?)`,
-            [passenger_phone, passenger_email],
-            (err, result) => {
-                if (err) {
-                    res.send(err);
-                } else {
-                    res.send({
-                        message: "Congrats! You have purchased the pass",
-                        result: result
-                    });
-                }
+router.post('/payment', async (req, res) => {
+    const {amount, token} = req.body;
+    console.log(token)
+    try {
+        await stripe.charges.create({
+            amount: amount,
+            currency: "inr",
+            source: token.id,
+            description: "Payment for Bus Ticket"
+        }, (err, result) => {
+            if (err) {
+                res.send(err);
+            } else {
+                res.send(result);
             }
-        );
-    } else {
-        res.send({ message: 'Something went wrong' });
+        }
+        )
+    } catch (err) {
+        console.log(err)
     }
+
 });
 
 // Logout
